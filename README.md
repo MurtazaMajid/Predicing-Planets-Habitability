@@ -1,2 +1,2 @@
-# Predicing-Planets-Habitability
-Revealing the secrets of planets habitabilty using NASAs KOI Dataset
+🌌 KOI Exoplanet Habitability Prediction 🚀
+Unlock the mysteries of space! This project analyzes NASA's KOI dataset to predict the habitability of exoplanets 🌍. Using a linear regression model, it highlights the influence of key features like stellar flux ☀️, planetary radius 🌐, and stellar temperature 🌡️.
