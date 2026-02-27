@@ -1,4 +1,12 @@
 {
   "buildCommand": "pip install -r requirements.txt && npm run build",
-  "runtime": "python3.11"
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1.py" }
+  ],
+  "functions": {
+    "api/*.py": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
 }
