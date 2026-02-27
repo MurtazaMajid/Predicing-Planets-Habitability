@@ -1,0 +1,4 @@
+{
+  "buildCommand": "pip install -r requirements.txt && npm run build",
+  "runtime": "python3.11"
+}
