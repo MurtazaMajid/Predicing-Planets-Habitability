@@ -54,6 +54,8 @@ export function Starfield() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    let animationId: number;
+
     // Create stars
     const stars: Star[] = [];
     const starCount = 250;
@@ -112,7 +114,6 @@ export function Starfield() {
     const shootingStars: ShootingStar[] = [];
     const ufos: UFO[] = [];
 
-    let animationId: number;
     let shootingStarCounter = 0;
     let ufoCounter = 0;
 
