@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-
-const execPromise = promisify(exec);
+import fetch from 'node-fetch';
 
 /**
- * Real ML Model Prediction via Python
- * Loads the joblib model from GitHub and makes predictions
+ * Real ML Model Prediction using Hugging Face Space API
+ * Calls the trained XGBoost model deployed on Hugging Face
  */
 async function predictWithRealModel(features: {
   stellarTemperatureScore: number;
@@ -18,36 +14,45 @@ async function predictWithRealModel(features: {
   equilibriumTemperatureScore: number;
 }): Promise<number> {
   try {
-    // Path to the Python prediction script
-    const scriptPath = path.join(process.cwd(), 'scripts', 'predict_habitability.py');
-
-    // Build command with feature arguments (6 features)
-    const cmd = `python3 "${scriptPath}" ${features.stellarTemperatureScore} ${features.stellarRadiusScore} ${features.planetRadiusScore} ${features.insolationScore} ${features.orbitalPeriodScore} ${features.equilibriumTemperatureScore}`;
-
-    console.log('[v0] Executing Python prediction script...');
-    const { stdout, stderr } = await execPromise(cmd, {
-      timeout: 60000, // 60 second timeout
-      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+    console.log('[v0] Calling Hugging Face Space API with real XGBoost model...');
+    
+    const hfApiUrl = 'https://murtazamajid-planet-habitability-api.hf.space';
+    
+    const response = await fetch(`${hfApiUrl}/predict`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        stellarTemperatureScore: features.stellarTemperatureScore,
+        stellarRadiusScore: features.stellarRadiusScore,
+        planetRadiusScore: features.planetRadiusScore,
+        insolationScore: features.insolationScore,
+        orbitalPeriodScore: features.orbitalPeriodScore,
+        equilibriumTemperatureScore: features.equilibriumTemperatureScore,
+      }),
+      timeout: 30000, // 30 second timeout
     });
 
-    // Log stderr for debugging
-    if (stderr) {
-      console.log('[v0] Python script stderr:', stderr);
+    if (!response.ok) {
+      throw new Error(`Hugging Face API returned ${response.status}: ${response.statusText}`);
     }
 
-    // Parse the JSON response from Python script
-    const result = JSON.parse(stdout);
+    const result = await response.json() as { habitability_score?: number; score?: number };
+    const prediction = result.habitability_score || result.score;
 
-    if (!result.success && result.error) {
-      throw new Error(result.error);
+    if (typeof prediction !== 'number') {
+      throw new Error('Invalid response format from Hugging Face API');
     }
 
-    return result.habitability_score;
+    console.log('[v0] Real XGBoost model prediction from HF:', prediction);
+    return prediction;
   } catch (error) {
-    console.error('[v0] Python model error:', error);
+    console.error('[v0] Hugging Face API error:', error);
     throw error;
   }
 }
+
 
 /**
  * Fallback mock prediction model
