@@ -149,11 +149,15 @@ export async function POST(request: NextRequest) {
 
     // Try to use real model first
     try {
+      console.log('[v0] Attempting to use real XGBoost model...');
       prediction = await predictWithRealModel(features);
+      console.log('[v0] Real model prediction successful:', prediction);
     } catch (pythonError) {
-      console.warn('[v0] Real model failed, falling back to mock:', pythonError);
+      console.error('[v0] Real model failed with error:', pythonError);
+      console.warn('[v0] Falling back to mock model...');
       prediction = mockPredictHabitability(features);
       modelSource = 'mock';
+      console.log('[v0] Mock model prediction result:', prediction);
     }
 
     return NextResponse.json({
