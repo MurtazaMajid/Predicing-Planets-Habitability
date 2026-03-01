@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fetch from 'node-fetch';
 
 /**
  * Real ML Model Prediction using Hugging Face Space API
@@ -31,14 +30,13 @@ async function predictWithRealModel(features: {
         orbitalPeriodScore: features.orbitalPeriodScore,
         equilibriumTemperatureScore: features.equilibriumTemperatureScore,
       }),
-      timeout: 30000, // 30 second timeout
     });
 
     if (!response.ok) {
       throw new Error(`Hugging Face API returned ${response.status}: ${response.statusText}`);
     }
 
-    const result = await response.json() as { habitability_score?: number; score?: number };
+    const result = (await response.json()) as { habitability_score?: number; score?: number };
     const prediction = result.habitability_score || result.score;
 
     if (typeof prediction !== 'number') {
@@ -53,10 +51,8 @@ async function predictWithRealModel(features: {
   }
 }
 
-
 /**
  * Fallback mock prediction model
- * Used if Python script fails (for development/testing)
  */
 function mockPredictHabitability(features: {
   stellarTemperatureScore: number;
@@ -66,12 +62,9 @@ function mockPredictHabitability(features: {
   orbitalPeriodScore: number;
   equilibriumTemperatureScore: number;
 }): number {
-  // Normalize scores to 0-100 range for calculation
-  // orbitalPeriodScore max is 50, equilibriumTemperatureScore max is 70
   const normalizedOrbitalPeriod = (features.orbitalPeriodScore / 50) * 100;
   const normalizedEquilibriumTemp = (features.equilibriumTemperatureScore / 70) * 100;
 
-  // Weighted average of all 6 features
   const weights = {
     stellarTemperature: 0.18,
     stellarRadius: 0.18,
@@ -89,12 +82,11 @@ function mockPredictHabitability(features: {
     normalizedOrbitalPeriod * weights.orbitalPeriod +
     normalizedEquilibriumTemp * weights.equilibriumTemp;
 
-  // Apply some non-linear adjustments
-  const temperatureFit = Math.abs(features.equilibriumTemperatureScore - 55); // Prefer around 55
-  const insolationFit = Math.abs(features.insolationScore - 70); // Prefer around 70
+  const temperatureFit = Math.abs(features.equilibriumTemperatureScore - 55);
+  const insolationFit = Math.abs(features.insolationScore - 70);
 
   let finalScore = baseScore - temperatureFit * 0.15 - insolationFit * 0.1;
-  finalScore += (Math.random() - 0.5) * 4; // Less randomness
+  finalScore += (Math.random() - 0.5) * 4;
 
   return Math.max(0, Math.min(100, finalScore));
 }
@@ -102,8 +94,6 @@ function mockPredictHabitability(features: {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
-    // Validate input - 6 features required
     const {
       stellarTemperatureScore,
       stellarRadiusScore,
@@ -127,7 +117,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate ranges - different max values for different features
     if (stellarTemperatureScore < 1 || stellarTemperatureScore > 100 ||
         stellarRadiusScore < 1 || stellarRadiusScore > 100 ||
         planetRadiusScore < 1 || planetRadiusScore > 100 ||
@@ -135,7 +124,7 @@ export async function POST(request: NextRequest) {
         orbitalPeriodScore < 1 || orbitalPeriodScore > 50 ||
         equilibriumTemperatureScore < 1 || equilibriumTemperatureScore > 70) {
       return NextResponse.json(
-        { error: 'Invalid feature ranges: Check input values (4 features 1-100, orbital period 1-50, equilibrium temp 1-70)' },
+        { error: 'Invalid feature ranges' },
         { status: 400 }
       );
     }
@@ -152,17 +141,11 @@ export async function POST(request: NextRequest) {
     let prediction: number;
     let modelSource = 'real';
 
-    // Try to use real model first
     try {
-      console.log('[v0] Attempting to use real XGBoost model...');
       prediction = await predictWithRealModel(features);
-      console.log('[v0] Real model prediction successful:', prediction);
-    } catch (pythonError) {
-      console.error('[v0] Real model failed with error:', pythonError);
-      console.warn('[v0] Falling back to mock model...');
+    } catch {
       prediction = mockPredictHabitability(features);
       modelSource = 'mock';
-      console.log('[v0] Mock model prediction result:', prediction);
     }
 
     return NextResponse.json({
@@ -171,7 +154,6 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Prediction error:', error);
     return NextResponse.json(
       { error: 'Failed to generate prediction' },
       { status: 500 }
