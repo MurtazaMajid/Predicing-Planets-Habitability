@@ -15,9 +15,11 @@ interface PredictionResultProps {
     orbitalPeriodScore: number;
     equilibriumTemperatureScore: number;
   };
+  modelSource?: 'real' | 'mock' | null;
+  debugMode?: boolean;
 }
 
-export function PredictionResult({ score, loading, submitted, features }: PredictionResultProps) {
+export function PredictionResult({ score, loading, submitted, features, modelSource, debugMode }: PredictionResultProps) {
   const getFeatureAnalysis = () => {
     if (!features) return null;
 
@@ -278,6 +280,26 @@ export function PredictionResult({ score, loading, submitted, features }: Predic
               {habitability.verdict}
             </p>
           </div>
+
+          {/* Hidden Model Source Indicator - Only visible when debug mode is enabled (Press M 3 times) */}
+          {debugMode && (
+            <div className={`p-3 rounded-lg border ${modelSource === 'real' ? 'border-green-500/40 bg-green-500/5' : 'border-yellow-500/40 bg-yellow-500/5'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${modelSource === 'real' ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
+                <p className="text-xs font-semibold text-slate-300">
+                  {modelSource === 'real' ? (
+                    <>
+                      <span className="text-green-400">✓ XGBoost ML Model</span> - Prediction made using your trained machine learning model from GitHub
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-yellow-400">⚠ Fallback Model</span> - Using mock prediction (real model temporarily unavailable)
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Card>
