@@ -22,6 +22,12 @@
 
 **[Live Web App](https://astro-life-quest.vercel.app/) &nbsp;|&nbsp; [API on HuggingFace Spaces](https://huggingface.co/spaces/murtazamajid/planet-habitability-api) &nbsp;|&nbsp; [Notebook](notebooks/) &nbsp;|&nbsp; [Dataset](data/)**
 
+---
+
+![Habitability Predictor demo](Images/demo.gif)
+
+---
+
 </div>
 
 ---
