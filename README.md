@@ -24,14 +24,12 @@
 
 </div>
 
----
 
 ---
 
-![Habitability Predictor demo](Images/demo.gif)
+![Exoplanet Habitability Predictor](images/app_screenshot.png)
 
 ---
-
 ## Table of Contents
 
 - [Project Highlights](#project-highlights)
