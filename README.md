@@ -26,6 +26,12 @@
 
 ---
 
+---
+
+![Habitability Predictor demo](Images/demo.gif)
+
+---
+
 ## Table of Contents
 
 - [Project Highlights](#project-highlights)
